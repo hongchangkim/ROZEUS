@@ -11,15 +11,25 @@ contract RozToken is StandardToken, Pausable {
   uint256 _totalSupply = 10000000000;  
 
   bool public minted = false;
+  
 
+  // partner account lockup controll
   struct BusinessPartner {
+    // account lockup amount
     uint256 account_total;
+    // lockup start day
     uint256 set_date;
+    // Payment cycle (month)
+    // ex) 1 - 1month , 3 - 3month
     uint256 set_period;
-    uint256 set_num;    
+    // Payment number
+    // ex) 3 - 3 payments , 6 - 6 payments
+    uint256 set_num;
+    // Withdrawal quantity
     uint256 account_withdraw;
   }
 
+  
   mapping (address => BusinessPartner ) m_bp;
   BusinessPartner bp;  
   
@@ -60,6 +70,14 @@ contract RozToken is StandardToken, Pausable {
     emit Transfer(address(0), 0x16C5EB21D3441eF11815CFbF2B34861264F87924, bounty_fund);
   }
   
+   // lockup setting function 	
+   // ex) arg1 : lockup address - 0x16C5EB21D3441eF11815CFbF2B34861264F87924
+   //     arg2 : lockup token amount - 10000000000
+   //     arg3 : lockup start day(unix time) - 1557205425( May 7 )
+   //     arg4 : Payment cycle - 3 (per 3 month)
+   //     arg5 : Payment number - 4 ( 4 times)
+   //     arg6 : Withdrawal amount - 0 (token tranfer amount sum )
+   //    * 100 tokens are divided into 4 times in 3-month cycle so that they can be withdrawn. 
   function setBusinessPartner(address _addr, uint256 _acc_tot, uint256 _date, uint256 _period, uint256 _num, uint256 _acc_with ) public onlyOwner returns (bool) {    
     require(m_bp[_addr].account_total == 0 ) ;
     bp = BusinessPartner(_acc_tot, _date , _period, _num, _acc_with);    
@@ -77,7 +95,7 @@ contract RozToken is StandardToken, Pausable {
     if(m_bp[msg.sender].account_total > 0) {
       uint256 setday = m_bp[msg.sender].set_period.mul(30 days);
       uint256 elapsed_time = now.sub(m_bp[msg.sender].set_date);      
-      current_step = elapsed_time/setday;
+      current_step = elapsed_time.div(setday);
 
       uint256 account_total_mod = m_bp[msg.sender].account_total % m_bp[msg.sender].set_num;
       uint256 account_total_sub = m_bp[msg.sender].account_total;
