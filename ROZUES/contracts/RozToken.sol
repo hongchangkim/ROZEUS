@@ -80,6 +80,7 @@ contract RozToken is StandardToken, Pausable {
    //    * 100 tokens are divided into 4 times in 3-month cycle so that they can be withdrawn. 
   function setBusinessPartner(address _addr, uint256 _acc_tot, uint256 _date, uint256 _period, uint256 _num, uint256 _acc_with ) public onlyOwner returns (bool) {    
     require(m_bp[_addr].account_total == 0 ) ;
+    
     bp = BusinessPartner(_acc_tot, _date , _period, _num, _acc_with);    
     m_bp[_addr] = bp;
     return true;    
@@ -97,7 +98,7 @@ contract RozToken is StandardToken, Pausable {
       uint256 elapsed_time = now.sub(m_bp[msg.sender].set_date);      
       current_step = elapsed_time.div(setday);
 
-      uint256 account_total_mod = m_bp[msg.sender].account_total % m_bp[msg.sender].set_num;
+      uint256 account_total_mod = m_bp[msg.sender].account_total.mod(m_bp[msg.sender].set_num);
       uint256 account_total_sub = m_bp[msg.sender].account_total;
       if(account_total_mod>0) account_total_sub = m_bp[msg.sender].account_total.sub(account_total_mod);
       
