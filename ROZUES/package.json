@@ -1,0 +1,31 @@
+{
+  "name": "rozeus",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hongchangkim/ROZEUS.git"
+  },
+  "keywords": [
+    "ROZEUS"
+  ],
+  "author": "hongchang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hongchangkim/ROZEUS/issues"
+  },
+  "homepage": "https://github.com/hongchangkim/ROZEUS#readme",
+  "dependencies": {
+    "openzeppelin-solidity": "2.3.0",
+    "solc": "^0.5.9",
+    "truffle": "^5.0.21",
+    "zeppelin-solidity": "^1.12.0"
+  }
+}

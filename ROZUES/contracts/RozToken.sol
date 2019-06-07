@@ -1,7 +1,7 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5.9;
 
-import "openzeppelin-solidity/contracts/token/ERC20/StandardToken.sol";
-import "openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
+import "./StandardToken.sol";
+import "./Pausable.sol";
                                         
 contract RozToken is StandardToken, Pausable {
 
@@ -15,8 +15,8 @@ contract RozToken is StandardToken, Pausable {
   struct BusinessPartner {
     uint256 account_total;
     uint256 set_date;
-    uint8 set_period;
-    uint8 set_num;    
+    uint256 set_period;
+    uint256 set_num;    
     uint256 account_withdraw;
   }
 
@@ -60,35 +60,36 @@ contract RozToken is StandardToken, Pausable {
     emit Transfer(address(0), 0x16C5EB21D3441eF11815CFbF2B34861264F87924, bounty_fund);
   }
   
-  function setBusinessPartner(address _addr, uint256 _acc_tot, uint256 _date, uint8 _period, uint8 _num, uint256 _acc_with ) public onlyOwner returns (bool) {    
+  function setBusinessPartner(address _addr, uint256 _acc_tot, uint256 _date, uint256 _period, uint256 _num, uint256 _acc_with ) public onlyOwner returns (bool) {    
     require(m_bp[_addr].account_total == 0 ) ;
     bp = BusinessPartner(_acc_tot, _date , _period, _num, _acc_with);    
     m_bp[_addr] = bp;
     return true;    
   }  
   
-  function getBusinessPartner(address _addr ) view public returns (uint256,uint256,uint8,uint8,uint256) {    
+  function getBusinessPartner(address _addr ) view public returns (uint256,uint256,uint256,uint256,uint256) {    
     return (m_bp[_addr].account_total,m_bp[_addr].set_date, m_bp[_addr].set_period, m_bp[_addr].set_num , m_bp[_addr].account_withdraw);
   }
 
   function transfer( address to, uint256 value ) public whenNotPaused returns (bool)  {
     uint256 current_step = 0;
+    uint256 enable_balance;
     if(m_bp[msg.sender].account_total > 0) {
-      uint256 setday = m_bp[msg.sender].set_period * 30 days;
-      uint256 elapsed_time = now-m_bp[msg.sender].set_date;      
+      uint256 setday = m_bp[msg.sender].set_period.mul(30 days);
+      uint256 elapsed_time = now.sub(m_bp[msg.sender].set_date);      
       current_step = elapsed_time/setday;
 
       uint256 account_total_mod = m_bp[msg.sender].account_total % m_bp[msg.sender].set_num;
       uint256 account_total_sub = m_bp[msg.sender].account_total;
-      if(account_total_mod>0) account_total_sub = m_bp[msg.sender].account_total - account_total_mod;
+      if(account_total_mod>0) account_total_sub = m_bp[msg.sender].account_total.sub(account_total_mod);
       
-      uint256 enable_balance = (account_total_sub.div(m_bp[msg.sender].set_num)).mul(current_step) + account_total_mod;
+      enable_balance = (account_total_sub.div(m_bp[msg.sender].set_num)).mul(current_step).add(account_total_mod);
       emit LockupStep(msg.sender,": enable_balance!!!." , enable_balance , current_step , account_total_sub );  
     }
     require(m_bp[msg.sender].account_total == 0 || (enable_balance >= value && enable_balance.sub(m_bp[msg.sender].account_withdraw) >= value) ) ;    
-     
+    require(m_bp[msg.sender].account_withdraw.add(value) > m_bp[msg.sender].account_withdraw);  
     if(super.transfer(to, value)) {
-      if(m_bp[msg.sender].account_total > 0) m_bp[msg.sender].account_withdraw += value ;
+      if(m_bp[msg.sender].account_total > 0) m_bp[msg.sender].account_withdraw = m_bp[msg.sender].account_withdraw.add(value) ;
       return true;
     } else {
       return false;
@@ -122,6 +123,7 @@ contract RozToken is StandardToken, Pausable {
   }
   
   function mint( address _to, uint256 _amount ) public whenNotPaused whenMinted onlyOwner returns (bool) {
+    require(_to > address(0));
     totalSupply_ = totalSupply_.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     
